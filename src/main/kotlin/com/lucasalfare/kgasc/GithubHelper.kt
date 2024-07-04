@@ -1,3 +1,5 @@
+package com.lucasalfare.kgasc
+
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.cio.*
@@ -52,7 +54,7 @@ object GithubHelper {
     commitMessage: String = "Upload file via my custom API wrapper 🛠"
   ): UploadResponseDTO? {
     // TODO: perform validations
-    if (!::client.isInitialized || !client.isActive) initClient()
+    if (!GithubHelper::client.isInitialized || !client.isActive) initClient()
     val file = File(inputFilePath)
     val fileContentBase64 = Base64.encode(file.readBytes())
     val finalTargetPath = "$targetPathInRepository/${file.name}"
@@ -89,7 +91,7 @@ object GithubHelper {
     fileUrl: String,
     outputFileName: String? = null // points to some PATH
   ): Boolean {
-    if (!::client.isInitialized || !client.isActive) initClient()
+    if (!GithubHelper::client.isInitialized || !client.isActive) initClient()
     val getResponse = client.get(fileUrl)
     return (if (getResponse.status == HttpStatusCode.OK) {
       val url = Url(outputFileName ?: fileUrl)

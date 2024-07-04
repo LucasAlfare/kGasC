@@ -8,7 +8,7 @@ plugins {
 val ktor_version: String by project
 val exposed_version: String by project
 
-group = "com.lucasalfare"
+group = "com.lucasalfare.kgasc"
 version = "1.0-SNAPSHOT"
 
 repositories {

@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package com.lucasalfare.kgasc
 
 import io.ktor.client.*
@@ -44,7 +46,7 @@ object GithubHelper {
 
   private lateinit var client: HttpClient
 
-  @OptIn(ExperimentalEncodingApi::class, ExperimentalEncodingApi::class)
+  @OptIn(ExperimentalEncodingApi::class)
   suspend fun uploadFileToGithub(
     githubToken: String,
     username: String,
@@ -53,11 +55,12 @@ object GithubHelper {
     targetPathInRepository: String, // omits file name, will be the same of input file
     commitMessage: String = "Upload file via my custom API wrapper 🛠"
   ): UploadResponseDTO? {
-    // TODO: perform validations
-    if (!GithubHelper::client.isInitialized || !client.isActive) initClient()
+    initClient()
+
     val file = File(inputFilePath)
     val fileContentBase64 = Base64.encode(file.readBytes())
     val finalTargetPath = "$targetPathInRepository/${file.name}"
+
     val response = client.put(
       urlString = "https://api.github.com/repos/$username/$repository/contents/$finalTargetPath"
     ) {
@@ -77,12 +80,14 @@ object GithubHelper {
       )
     }
 
-    return (if (response.status == HttpStatusCode.Created || response.status == HttpStatusCode.OK) {
+    val result = if (response.status == HttpStatusCode.Created || response.status == HttpStatusCode.OK) {
       response.body<UploadResponseDTO>()
     } else {
       null
-    }).apply {
-      println("Request result was: $this")
+    }
+
+    return result.also {
+      println("Request result was: $it")
       client.close()
     }
   }
@@ -91,36 +96,42 @@ object GithubHelper {
     fileUrl: String,
     outputFileName: String? = null // points to some PATH
   ): Boolean {
-    if (!GithubHelper::client.isInitialized || !client.isActive) initClient()
+    initClient()
+
     val getResponse = client.get(fileUrl)
-    return (if (getResponse.status == HttpStatusCode.OK) {
+
+    val result = if (getResponse.status == HttpStatusCode.OK) {
       val url = Url(outputFileName ?: fileUrl)
       val file = File(url.pathSegments.last())
       getResponse.bodyAsChannel().copyAndClose(file.writeChannel()) > 0L
     } else {
       false
-    }).apply {
-      println("Download result was: $this")
+    }
+
+    return result.also {
+      println("Download result was: $it")
       client.close()
     }
   }
 
   private fun initClient() {
-    client = HttpClient(CIO) {
-      install(ContentNegotiation) {
-        json(
-          Json {
-            isLenient = false
-            prettyPrint = true
-            ignoreUnknownKeys = true
-          }
-        )
+    if (!GithubHelper::client.isInitialized || !client.isActive) {
+      client = HttpClient(CIO) {
+        install(ContentNegotiation) {
+          json(
+            Json {
+              isLenient = false
+              prettyPrint = true
+              ignoreUnknownKeys = true
+            }
+          )
+        }
       }
     }
   }
 }
 
-@Deprecated("Not really deprecated, but is just a quick live example of how to use the functions. :)")
+/*
 suspend fun usageExample() {
   // this will really fail
   runCatching {
@@ -142,3 +153,4 @@ suspend fun usageExample() {
     println("Did you really tried to run a explicit failable code? 💀")
   }
 }
+ */

@@ -46,7 +46,6 @@ object GithubHelper {
 
   private lateinit var client: HttpClient
 
-  @OptIn(ExperimentalEncodingApi::class)
   suspend fun uploadFileToGithub(
     githubToken: String,
     username: String,
@@ -55,11 +54,33 @@ object GithubHelper {
     targetPathInRepository: String, // omits file name, will be the same of input file
     commitMessage: String = "Upload file via my custom API wrapper 🛠"
   ): UploadResponseDTO? {
+    val tmpFile = File(inputFilePath)
+
+    return uploadFileToGithub(
+      githubToken = githubToken,
+      username = username,
+      repository = repository,
+      inputFileBytes = tmpFile.readBytes(),
+      inputFileName = tmpFile.name,
+      targetPathInRepository = targetPathInRepository,
+      commitMessage = commitMessage
+    )
+  }
+
+  @OptIn(ExperimentalEncodingApi::class)
+  suspend fun uploadFileToGithub(
+    githubToken: String,
+    username: String,
+    repository: String,
+    inputFileBytes: ByteArray,
+    inputFileName: String,
+    targetPathInRepository: String, // omits file name, will be the same of input file
+    commitMessage: String = "Upload file via my custom API wrapper 🛠"
+  ): UploadResponseDTO? {
     initClient()
 
-    val file = File(inputFilePath)
-    val fileContentBase64 = Base64.encode(file.readBytes())
-    val finalTargetPath = "$targetPathInRepository/${file.name}"
+    val fileContentBase64 = Base64.encode(inputFileBytes)
+    val finalTargetPath = "$targetPathInRepository/$inputFileName"
 
     val response = client.put(
       urlString = "https://api.github.com/repos/$username/$repository/contents/$finalTargetPath"
@@ -130,27 +151,3 @@ object GithubHelper {
     }
   }
 }
-
-/*
-suspend fun usageExample() {
-  // this will really fail
-  runCatching {
-    val uploadResult = GithubHelper.uploadFileToGithub(
-      githubToken = "TOKEN",
-      username = "OWNER NAME",
-      repository = "REPOSITORY NAME",
-      inputFilePath = "RELATIVE PATH FOR THE DESIRED FILE",
-      targetPathInRepository = "PATH WHERE TO PLACE THE INPUT FILE",
-      commitMessage = "A FANCY COMMIT MESSAGE" //optional, default "upload file via kGasC"
-    )
-
-    if (uploadResult != null) {
-      GithubHelper.downloadFile(
-        fileUrl = "THE DOWNLOAD FILE DIRECT URL"
-      )
-    }
-  }.onFailure {
-    println("Did you really tried to run a explicit failable code? 💀")
-  }
-}
- */

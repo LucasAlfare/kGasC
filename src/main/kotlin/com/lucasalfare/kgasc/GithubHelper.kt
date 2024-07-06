@@ -60,8 +60,8 @@ object GithubHelper {
       githubToken = githubToken,
       username = username,
       repository = repository,
-      inputFileBytes = tmpFile.readBytes(),
       inputFileName = tmpFile.name,
+      inputFileBytes = tmpFile.readBytes(),
       targetPathInRepository = targetPathInRepository,
       commitMessage = commitMessage
     )
@@ -72,8 +72,8 @@ object GithubHelper {
     githubToken: String,
     username: String,
     repository: String,
-    inputFileBytes: ByteArray,
     inputFileName: String,
+    inputFileBytes: ByteArray,
     targetPathInRepository: String, // omits file name, will be the same of input file
     commitMessage: String = "Upload file via my custom API wrapper 🛠"
   ): UploadResponseDTO? {
@@ -101,6 +101,8 @@ object GithubHelper {
       )
     }
 
+    println("[GithubHelper] Response of github uploading: $response")
+
     val result = if (response.status == HttpStatusCode.Created || response.status == HttpStatusCode.OK) {
       response.body<UploadResponseDTO>()
     } else {
@@ -108,7 +110,6 @@ object GithubHelper {
     }
 
     return result.also {
-      println("Request result was: $it")
       client.close()
     }
   }
@@ -130,7 +131,6 @@ object GithubHelper {
     }
 
     return result.also {
-      println("Download result was: $it")
       client.close()
     }
   }
@@ -150,4 +150,18 @@ object GithubHelper {
       }
     }
   }
+}
+
+suspend fun main() {
+  val bytes = File("my_img.jpg").readBytes()
+  val result = GithubHelper.uploadFileToGithub(
+    githubToken = System.getenv("GITHUB_API_TOKEN") ?: "",
+    username = "LucasAlfare",
+    repository = "cdn-test",
+    inputFileName = "kkk.jpg",
+    inputFileBytes = bytes,
+    targetPathInRepository = "uploads"
+  )
+
+  println(result)
 }

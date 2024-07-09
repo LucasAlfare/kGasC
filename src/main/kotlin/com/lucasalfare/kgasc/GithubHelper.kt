@@ -151,17 +151,3 @@ object GithubHelper {
     }
   }
 }
-
-suspend fun main() {
-  val bytes = File("my_img.jpg").readBytes()
-  val result = GithubHelper.uploadFileToGithub(
-    githubToken = System.getenv("GITHUB_API_TOKEN") ?: "",
-    username = "LucasAlfare",
-    repository = "cdn-test",
-    inputFileName = "kkk.jpg",
-    inputFileBytes = bytes,
-    targetPathInRepository = "uploads"
-  )
-
-  println(result)
-}

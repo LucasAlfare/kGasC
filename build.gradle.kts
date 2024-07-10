@@ -30,6 +30,12 @@ dependencies {
 tasks.test {
   useJUnitPlatform()
 }
+
 kotlin {
   jvmToolchain(17)
+}
+
+tasks.withType<Jar> {
+  duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+  from(configurations.compileClasspath.map { config -> config.map { if (it.isDirectory) it else zipTree(it) } })
 }
